@@ -1,6 +1,12 @@
 const { BadRequestError } = require("../expressError");
 
-// THIS NEEDS SOME GREAT DOCUMENTATION.
+
+/** Creates dynamic SQL for updating a database entry based on fields to be changed.
+   *
+   * Returns { setCols, values }
+   *
+   * Throws BadRequestError for no data to update being provided.
+   **/
 
 function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   const keys = Object.keys(dataToUpdate);
@@ -12,7 +18,7 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   );
 
   return {
-    setCols: cols.join(", "),
+    setCols: cols.join(', '),
     values: Object.values(dataToUpdate),
   };
 }
