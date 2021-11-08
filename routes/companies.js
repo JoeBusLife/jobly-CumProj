@@ -45,14 +45,34 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
  * Can filter on provided search filters:
  * - minEmployees
  * - maxEmployees
- * - nameLike (will find case-insensitive, partial matches)
+ * - name (will find case-insensitive, partial matches)
  *
  * Authorization required: none
  */
 
 router.get("/", async function (req, res, next) {
   try {
-    const companies = await Company.findAll();
+		const filterTypes = ['name', 'minEmployees', 'maxEmployees']
+		let filters = req.query;
+
+		if (Object.keys(filters).length === 0){
+			filters = false;
+		}
+		else {
+			if (!Object.entries(filters).every(([k,v]) => (
+				filterTypes.includes(k) && v !== ''
+			))){
+				throw new BadRequestError("Invalid filters");
+			}
+			
+			if ((filters.minEmployees != undefined &&
+			filters.maxEmployees != undefined) &&
+			+filters.minEmployees > +filters.maxEmployees) {
+				throw new BadRequestError("Invalid filters: minEmployees is > maxEmployees");
+			}
+		}
+
+    const companies = await Company.findAll(filters);
     return res.json({ companies });
   } catch (err) {
     return next(err);

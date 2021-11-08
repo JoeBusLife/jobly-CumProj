@@ -23,4 +23,39 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   };
 }
 
-module.exports = { sqlForPartialUpdate };
+
+/** Creates dynamic SQL for filitering a list of all companies
+   *
+   * Returns { where, values }
+   *
+   * Returns empty { where, values } if no filters are given
+   **/
+
+function sqlForFilteringCompanies(filters) {
+	const values = [];
+	// returns empty { where, values } if no filters are given
+	if (!filters) return {where: "", values};
+
+  const whereParams = [];
+	let idx = 1;
+		
+	if (filters.minEmployees){
+		whereParams.push(`num_Employees >= $${idx++}`);
+		values.push(filters.minEmployees)
+	}
+	if (filters.maxEmployees){
+		whereParams.push(`num_Employees <= $${idx++}`);
+		values.push(filters.maxEmployees)
+	}
+	if (filters.name){
+		whereParams.push(`name ILIKE $${idx++}`);
+		values.push(`%${filters.name}%`)
+	}
+	
+  return {
+    where: where = `WHERE ` + whereParams.join(' and '),
+    values
+  };
+}
+
+module.exports = { sqlForPartialUpdate, sqlForFilteringCompanies };
