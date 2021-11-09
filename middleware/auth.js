@@ -28,6 +28,7 @@ function authenticateJWT(req, res, next) {
   }
 }
 
+
 /** Middleware to use when they must be logged in.
  *
  * If not, raises Unauthorized.
@@ -43,7 +44,67 @@ function ensureLoggedIn(req, res, next) {
 }
 
 
+/** Middleware to use when correct user must be logged in.
+ *
+ * If not, raises Unauthorized.
+ */
+
+function ensureCorrectUser(req, res, next) {
+  try {
+    if (res.locals.user.username === req.params.username) {
+      return next();
+    } else {
+      return next(new UnauthorizedError());
+    }
+  } catch (err) {
+    // errors would happen here if we made a request and res.locals.user is undefined
+    return next(new UnauthorizedError());
+  }
+}
+
+
+/** Middleware to use when Admin user must be logged in.
+ *
+ * If not, raises Unauthorized.
+ */
+
+function ensureAdmin(req, res, next) {
+  try {
+    if (res.locals.user.isAdmin) {
+      return next();
+    } else {
+      return next(new UnauthorizedError());
+    }
+  } catch (err) {
+    // errors would happen here if we made a request and res.locals.user is undefined
+    return next(new UnauthorizedError());
+  }
+}
+
+
+/** Middleware to use when Admin user must be logged in.
+ *
+ * If not, raises Unauthorized.
+ */
+
+function ensureCorrectUserOrAdmin(req, res, next) {
+  try {
+    if (res.locals.user.isAdmin || res.locals.user.username === req.params.username) {
+      return next();
+    } else {
+      return next(new UnauthorizedError());
+    }
+  } catch (err) {
+    // errors would happen here if we made a request and res.locals.user is undefined
+    return next(new UnauthorizedError());
+  }
+}
+
+
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
+	ensureCorrectUser,
+	ensureAdmin,
+	ensureCorrectUserOrAdmin,
 };

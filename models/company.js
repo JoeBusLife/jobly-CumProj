@@ -50,8 +50,6 @@ class Company {
    * */
 
   static async findAll(filters) {
-		console.log(filters)
-
 		const { where, values } = sqlForFilteringCompanies(filters)
 
     const companiesRes = await db.query(
