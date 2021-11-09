@@ -66,7 +66,7 @@ describe("POST /companies", function () {
 /************************************** GET /companies */
 
 describe("GET /companies", function () {
-  test("ok for anon", async function () {
+  test("ok for anon: no filters", async function () {
     const resp = await request(app).get("/companies");
     expect(resp.body).toEqual({
       companies:
@@ -94,6 +94,60 @@ describe("GET /companies", function () {
             },
           ],
     });
+	});
+
+	test("ok for anon: all valid filters", async function () {
+		const resp = await request(app).get("/companies?name=c&minEmployees=1&maxEmployees=2");
+		expect(resp.body).toEqual({
+			companies:
+					[
+						{
+							handle: "c1",
+							name: "C1",
+							description: "Desc1",
+							numEmployees: 1,
+							logoUrl: "http://c1.img",
+						},
+						{
+							handle: "c2",
+							name: "C2",
+							description: "Desc2",
+							numEmployees: 2,
+							logoUrl: "http://c2.img",
+						}
+					],
+		});
+  });
+
+	test("ok for anon: maxEmployees filter", async function () {
+		const resp = await request(app).get("/companies?maxEmployees=1");
+		expect(resp.body).toEqual({
+			companies:
+					[
+						{
+							handle: "c1",
+							name: "C1",
+							description: "Desc1",
+							numEmployees: 1,
+							logoUrl: "http://c1.img",
+						}
+					],
+		});
+  });
+
+	test("ok for anon: non existant filter", async function () {
+		const resp = await request(app).get("/companies?what=c");
+		expect(resp.statusCode).toEqual(400);
+  });
+
+	test("ok for anon: empty filter value", async function () {
+		const resp = await request(app).get("/companies?name=");
+		expect(resp.statusCode).toEqual(400);
+  });
+
+	test("ok for anon: minEmployees value greater than maxEmployees value", async function () {
+		const resp = await request(app).get("/companies?minEmployees=3&maxEmployees=2");
+		expect(resp.statusCode).toEqual(400);
   });
 
   test("fails: test next() handler", async function () {
