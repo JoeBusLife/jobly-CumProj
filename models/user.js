@@ -117,8 +117,8 @@ class User {
 
   /** Given a username, return data about user.
    *
-   * Returns { username, first_name, last_name, is_admin, jobs }
-   *   where jobs is { id, title, company_handle, company_name, state }
+   * Returns { username, first_name, last_name, email, is_admin, jobs }
+   *   where jobs is [ job_id, ... ]
    *
    * Throws NotFoundError if user not found.
    **/
@@ -139,8 +139,46 @@ class User {
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
 
+		const applicationsRes = await db.query(
+          `SELECT job_id
+           FROM applications
+           WHERE username = $1`, [username]);
+
+    user.applications = applicationsRes.rows.map(a => a.job_id);
+
     return user;
   }
+
+	/** Given a username and jobId, apply user for a job saving to database.
+   *
+   * Returns { applied: jobId }
+   *
+   * Throws NotFoundError if user or jobId not found.
+   **/
+
+	static async applyJob(username, jobId) {
+		const preCheck = await db.query(
+          `SELECT id
+           FROM jobs
+           WHERE id = $1`, [jobId]);
+    const job = preCheck.rows[0];
+
+    if (!job) throw new NotFoundError(`No job: ${jobId}`);
+
+    const preCheck2 = await db.query(
+          `SELECT username
+           FROM users
+           WHERE username = $1`, [username]);
+    const user = preCheck2.rows[0];
+
+    if (!user) throw new NotFoundError(`No username: ${username}`);
+
+		await db.query(
+					`INSERT INTO applications
+						(username, job_id)
+					 VALUES ($1, $2)`, [username, jobId],
+		);
+	}
 
   /** Update user data with `data`.
    *

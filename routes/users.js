@@ -24,7 +24,7 @@ const router = express.Router();
  * This returns the newly created user and an authentication token for them:
  *  {user: { username, firstName, lastName, email, isAdmin }, token }
  *
- * Authorization required: login
+ * Authorization required: admin
  **/
 
 router.post("/", ensureAdmin, async function (req, res, next) {
@@ -48,7 +48,7 @@ router.post("/", ensureAdmin, async function (req, res, next) {
  *
  * Returns list of all users.
  *
- * Authorization required: login
+ * Authorization required: admin
  **/
 
 router.get("/", ensureAdmin, async function (req, res, next) {
@@ -63,9 +63,10 @@ router.get("/", ensureAdmin, async function (req, res, next) {
 
 /** GET /[username] => { user }
  *
- * Returns { username, firstName, lastName, isAdmin }
+ * Returns { username, first_name, last_name, email, is_admin, jobs }
+ *   where jobs is [ job_id, ... ]
  *
- * Authorization required: login
+ * Authorization required: correct user or admin
  **/
 
 router.get("/:username", ensureCorrectUserOrAdmin, async function (req, res, next) {
@@ -78,6 +79,29 @@ router.get("/:username", ensureCorrectUserOrAdmin, async function (req, res, nex
 });
 
 
+/** POST /[username]/jobs/[id] => { applied: job_id }
+ *
+ * Returns { applied: job_id }
+ *
+ * Authorization required: correct user or admin
+ **/
+
+router.post("/:username/jobs/:id", ensureCorrectUserOrAdmin, async function (req, res, next) {
+	try {
+		const { username, id } = req.params;
+		await User.applyJob(username, id);
+
+		return res.status(201).json({ applied: +id })
+	} catch (err) {
+		if (err.code === '23505') {
+      return next(new BadRequestError("User already applied for this job"));
+    }
+		return next(err);
+	}
+	
+});
+
+
 /** PATCH /[username] { user } => { user }
  *
  * Data can include:
@@ -85,7 +109,7 @@ router.get("/:username", ensureCorrectUserOrAdmin, async function (req, res, nex
  *
  * Returns { username, firstName, lastName, email, isAdmin }
  *
- * Authorization required: login
+ * Authorization required: correct user or admin
  **/
 
 router.patch("/:username", ensureCorrectUserOrAdmin, async function (req, res, next) {
@@ -106,7 +130,7 @@ router.patch("/:username", ensureCorrectUserOrAdmin, async function (req, res, n
 
 /** DELETE /[username]  =>  { deleted: username }
  *
- * Authorization required: login
+ * Authorization required: correct user or admin
  **/
 
 router.delete("/:username", ensureCorrectUserOrAdmin, async function (req, res, next) {

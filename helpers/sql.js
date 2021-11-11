@@ -58,4 +58,42 @@ function sqlForFilteringCompanies(filters) {
   };
 }
 
-module.exports = { sqlForPartialUpdate, sqlForFilteringCompanies };
+
+/** Creates dynamic SQL for filitering a list of all jobs
+   *
+   * Returns { where, values }
+   *
+   * Returns empty { where, values } if no filters are given
+   **/
+
+function sqlForFilteringJobs(filters) {
+	const values = [];
+	// returns empty { where, values } if no filters are given
+	if (!filters) return {where: "", values};
+
+  const whereParams = [];
+	let idx = 1;
+
+	if (filters.title){
+		whereParams.push(`title ILIKE $${idx++}`);
+		values.push(`%${filters.title}%`)
+	}
+	if (filters.minSalary){
+		whereParams.push(`salary >= $${idx++}`);
+		values.push(filters.minSalary)
+	}
+	if (filters.hasEquity === "true"){
+		whereParams.push(`equity > 0`)
+	}
+	if (filters.companyHandle){
+		whereParams.push(`company_handle = $${idx++}`)
+		values.push(filters.companyHandle)
+	}
+
+	return {
+    where: where = `WHERE ` + whereParams.join(' and '),
+    values
+  };
+}
+
+module.exports = { sqlForPartialUpdate, sqlForFilteringCompanies, sqlForFilteringJobs };
